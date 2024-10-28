@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'LocationSharingScreen.dart';
 import 'firebase_options.dart';
+import 'home.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,8 +14,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Location Sharing App',
-      home: LocationSharingScreen(),
+      debugShowCheckedModeBanner: false,
+      title: 'home',
+      home: HomePage(),
     );
   }
 }
