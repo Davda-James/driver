@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:geolocator/geolocator.dart';
+import 'dart:async';
 
 class LocationSharingScreen extends StatefulWidget {
   @override
@@ -9,7 +10,7 @@ class LocationSharingScreen extends StatefulWidget {
 
 class _LocationSharingScreenState extends State<LocationSharingScreen> {
   String? _currentLocation;
-
+  Timer? _locationTimer;
   Future<void> _sendLocationToFirebase() async {
     // Request location permission
     LocationPermission permission = await Geolocator.checkPermission();
@@ -41,7 +42,27 @@ class _LocationSharingScreenState extends State<LocationSharingScreen> {
     setState(() {
       _currentLocation =
           'Lat: ${position.latitude}, Lon: ${position.longitude}';
-    }); 
+    });
+  }
+
+  void _startLocationUpdates() {
+    // Send location data every 5 seconds
+    _locationTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+      _sendLocationToFirebase();
+    });
+  }
+
+  void _stopLocationUpdates() {
+    // Cancel the timer to stop sending location updates
+    _locationTimer?.cancel();
+    _locationTimer = null;
+  }
+
+  @override
+  void dispose() {
+    // Ensure timer is canceled when the widget is disposed
+    _stopLocationUpdates();
+    super.dispose();
   }
 
   @override
@@ -53,8 +74,12 @@ class _LocationSharingScreenState extends State<LocationSharingScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton(
-              onPressed: _sendLocationToFirebase,
-              child: Text('Share My Location'),
+              onPressed: _startLocationUpdates,
+              child: Text('Start Sharing Location'),
+            ),
+            ElevatedButton(
+              onPressed: _stopLocationUpdates,
+              child: Text('Stop Sharing Location'),
             ),
             SizedBox(height: 20),
             if (_currentLocation != null)
