@@ -3,7 +3,9 @@ import 'sidebar.dart';
 import 'bottomnavigationbar.dart';
 import 'Notification.dart';
 import 'profile.dart';
-import 'notificationhsitory.dart';
+import 'notificationhistory.dart';
+import 'LocationService.dart';
+import 'dart:async';
 
 void main() {
   runApp(MyApp());
@@ -29,7 +31,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0; // State variable to track the selected index
-  String _selectedBus = 'Bus A'; // Default bus selection
+  String _selectedBus = 'busA'; // Default bus selection
+  final LocationService _locationService = LocationService();
+  bool _isSharingLocation = false;
+  Timer? _locationTimer;
 
   void _onSidebarItemSelected(int index) {
     setState(() {
@@ -45,7 +50,7 @@ class _HomePageState extends State<HomePage> {
     // Navigate based on the selected tab
     switch (index) {
       case 0:
-      // Navigate to Home or refresh the current page
+        // Navigate to Home or refresh the current page
         break;
       case 1:
         Navigator.push(
@@ -63,26 +68,52 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _shareLocation() {
-    // Implement location sharing logic here
+  void _shareLocation() async {
+    if (!_isSharingLocation) {
+      // Only start sharing if not already sharing
+      _locationTimer = Timer.periodic(Duration(seconds: 5), (timer) async {
+        await _locationService.sendLocationToFirebase(_selectedBus);
+        // Show Snackbar only when sharing is active
+        if (_isSharingLocation) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sharing location...')),
+          );
+        }
+      });
+
+      setState(() {
+        _isSharingLocation =
+            true; // Update the state to indicate location sharing is active
+      });
+    }
+  }
+
+  void _stopSharingLocation() {
+    _locationTimer?.cancel(); // Stop the timer
+    setState(() {
+      _isSharingLocation =
+          false; // Update the state to indicate location sharing has stopped
+    });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Sharing location...')),
+      SnackBar(content: Text('Location sharing stopped for $_selectedBus')),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Home Page'),
-        actions: [IconButton(
-          icon: Icon(Icons.history, color: Colors.black), // Back arrow icon
-          onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => NotificationHistoryPage()));
-             // Navigate back to the previous page
-          },
-        ),
+      appBar: AppBar(
+        title: Text('Home Page'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.history, color: Colors.black), // Back arrow icon
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => NotificationHistoryPage()));
+              // Navigate back to the previous page
+            },
+          ),
         ],
-
       ),
       drawer: SideBar(
         onItemSelected: _onSidebarItemSelected,
@@ -125,7 +156,7 @@ class _HomePageState extends State<HomePage> {
                         _selectedBus = newValue!;
                       });
                     },
-                    items: <String>['Bus A', 'Bus B', 'Bus C']
+                    items: <String>['busA', 'busB', 'busC']
                         .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
@@ -156,6 +187,22 @@ class _HomePageState extends State<HomePage> {
                 ),
                 child: Text(
                   'Share My Location',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _isSharingLocation ? _stopSharingLocation : null,
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  backgroundColor:
+                      _isSharingLocation ? Colors.red : Colors.grey,
+                ),
+                child: Text(
+                  'Stop Sharing Location',
                   style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),

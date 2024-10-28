@@ -15,7 +15,8 @@ class MyApp extends StatelessWidget {
 
 class NotificationHistoryPage extends StatefulWidget {
   @override
-  _NotificationHistoryPageState createState() => _NotificationHistoryPageState();
+  _NotificationHistoryPageState createState() =>
+      _NotificationHistoryPageState();
 }
 
 class _NotificationHistoryPageState extends State<NotificationHistoryPage> {
@@ -23,7 +24,7 @@ class _NotificationHistoryPageState extends State<NotificationHistoryPage> {
   String? selectedNotificationType;
 
   final List<String> buses = ['Bus 1', 'Bus 2', 'Bus 3'];
-  final List<String> notificationTypes = ['Land slide', 'Bus delay', 'General'];
+  final List<String> notificationTypes = ['landslide', 'delay', 'general'];
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +36,8 @@ class _NotificationHistoryPageState extends State<NotificationHistoryPage> {
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch, // Make the column take full width
+          crossAxisAlignment:
+              CrossAxisAlignment.stretch, // Make the column take full width
           children: [
             // Bus Selector
             Padding(
@@ -101,7 +103,8 @@ class _NotificationHistoryPageState extends State<NotificationHistoryPage> {
               },
               child: Text(
                 'Get Notifications',
-                style: TextStyle(fontSize: 18,color: Colors.white), // Increased font size
+                style: TextStyle(
+                    fontSize: 18, color: Colors.white), // Increased font size
               ),
             ),
           ],
