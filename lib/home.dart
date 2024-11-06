@@ -35,6 +35,7 @@ class _HomePageState extends State<HomePage> {
   final LocationService _locationService = LocationService();
   bool _isSharingLocation = false;
   Timer? _locationTimer;
+  bool _isSnackbarVisible = false; //Tracking snackbar visibility
 
   void _onSidebarItemSelected(int index) {
     setState(() {
@@ -73,10 +74,18 @@ class _HomePageState extends State<HomePage> {
       // Only start sharing if not already sharing
       _locationTimer = Timer.periodic(Duration(seconds: 5), (timer) async {
         await _locationService.sendLocationToFirebase(_selectedBus);
-        // Show Snackbar only when sharing is active
-        if (_isSharingLocation) {
+        // Show Snackbar only when sharing is active and not already visible
+        if (_isSharingLocation && !_isSnackbarVisible) {
+          setState(() {
+            _isSnackbarVisible = true; // Set the snackbar as visible
+          });
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Sharing location...')),
+            SnackBar(
+              content: Text('Sharing location...'),
+              duration: Duration(days: 1),
+              action: SnackBarAction(
+                  label: 'Dismiss', onPressed: _stopSharingLocation),
+            ),
           );
         }
       });
@@ -93,7 +102,9 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _isSharingLocation =
           false; // Update the state to indicate location sharing has stopped
+      _isSnackbarVisible = false; // Set the snackbar as not visible
     });
+    ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Dismiss the snackbar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Location sharing stopped for $_selectedBus')),
     );
