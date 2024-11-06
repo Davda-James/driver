@@ -5,7 +5,6 @@ import 'Notification.dart';
 import 'profile.dart';
 import 'notificationhistory.dart';
 import 'LocationService.dart';
-import 'dart:async';
 
 void main() {
   runApp(MyApp());
@@ -30,12 +29,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0; // State variable to track the selected index
-  String _selectedBus = 'busA'; // Default bus selection
+  int _selectedIndex = 0;
+  String _selectedBus = 'busA';
   final LocationService _locationService = LocationService();
   bool _isSharingLocation = false;
-  Timer? _locationTimer;
-  bool _isSnackbarVisible = false; //Tracking snackbar visibility
+  bool _isSnackbarVisible = false;
 
   void _onSidebarItemSelected(int index) {
     setState(() {
@@ -48,10 +46,8 @@ class _HomePageState extends State<HomePage> {
       _selectedIndex = index;
     });
 
-    // Navigate based on the selected tab
     switch (index) {
       case 0:
-        // Navigate to Home or refresh the current page
         break;
       case 1:
         Navigator.push(
@@ -59,7 +55,6 @@ class _HomePageState extends State<HomePage> {
           MaterialPageRoute(builder: (context) => NotificationSettingsPage()),
         );
         break;
-
       case 2:
         Navigator.push(
           context,
@@ -69,42 +64,34 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _shareLocation() async {
+  Future<void> _shareLocation() async {
     if (!_isSharingLocation) {
-      // Only start sharing if not already sharing
-      _locationTimer = Timer.periodic(Duration(seconds: 5), (timer) async {
-        await _locationService.sendLocationToFirebase(_selectedBus);
-        // Show Snackbar only when sharing is active and not already visible
-        if (_isSharingLocation && !_isSnackbarVisible) {
-          setState(() {
-            _isSnackbarVisible = true; // Set the snackbar as visible
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Sharing location...'),
-              duration: Duration(days: 1),
-              action: SnackBarAction(
-                  label: 'Dismiss', onPressed: _stopSharingLocation),
-            ),
-          );
-        }
-      });
+      await _locationService.startLocationUpdates(_selectedBus,
+          interval: Duration(seconds: 2));
 
       setState(() {
-        _isSharingLocation =
-            true; // Update the state to indicate location sharing is active
+        _isSharingLocation = true;
+        _isSnackbarVisible = true;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Sharing location...'),
+          duration: Duration(days: 1), // Infinite snackbar duration
+          action:
+              SnackBarAction(label: 'Dismiss', onPressed: _stopSharingLocation),
+        ),
+      );
     }
   }
 
   void _stopSharingLocation() {
-    _locationTimer?.cancel(); // Stop the timer
+    _locationService.stopLocationUpdates();
+
     setState(() {
-      _isSharingLocation =
-          false; // Update the state to indicate location sharing has stopped
-      _isSnackbarVisible = false; // Set the snackbar as not visible
+      _isSharingLocation = false;
+      _isSnackbarVisible = false;
     });
-    ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Dismiss the snackbar
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Location sharing stopped for $_selectedBus')),
     );
@@ -117,11 +104,10 @@ class _HomePageState extends State<HomePage> {
         title: Text('Home Page'),
         actions: [
           IconButton(
-            icon: Icon(Icons.history, color: Colors.black), // Back arrow icon
+            icon: Icon(Icons.history, color: Colors.black),
             onPressed: () {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => NotificationHistoryPage()));
-              // Navigate back to the previous page
             },
           ),
         ],
@@ -136,7 +122,6 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Dropdown for bus selection
               Text(
                 'Select Bus',
                 style: TextStyle(
@@ -146,8 +131,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               SizedBox(height: 20),
-
-              // Updated Dropdown with a minimalistic and modern design
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
@@ -178,15 +161,13 @@ class _HomePageState extends State<HomePage> {
                       );
                     }).toList(),
                     hint: Text(
-                      'Choose a time slot',
+                      'Choose a bus',
                       style: TextStyle(color: Colors.grey),
                     ),
                   ),
                 ),
               ),
               SizedBox(height: 40),
-
-              // Center the button with more styling
               ElevatedButton(
                 onPressed: _shareLocation,
                 style: ElevatedButton.styleFrom(
@@ -194,7 +175,7 @@ class _HomePageState extends State<HomePage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  backgroundColor: Colors.black, // Button color
+                  backgroundColor: Colors.black,
                 ),
                 child: Text(
                   'Share My Location',
